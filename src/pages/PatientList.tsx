@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, UserCircle, Copy, Check, Trash2, X } from 'lucide-react';
+import { Plus, Search, UserCircle, Copy, Check, Trash2, X, Share2, Brain, ClipboardList } from 'lucide-react';
 import Layout from '../components/Layout';
-import { getPatients, addPatient, deletePatient } from '../utils/store';
+import { getPatients, addPatient, deletePatient, getShareableLink, getAnamnesis, getMolecularEntries, hasPatientFilledToday } from '../utils/store';
 import type { Patient } from '../types';
 
 export default function PatientList() {
@@ -11,6 +11,7 @@ export default function PatientList() {
   const [search, setSearch] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
+  const [copiedLink, setCopiedLink] = useState<string | null>(null);
   const [form, setForm] = useState({
     name: '',
     email: '',
@@ -38,7 +39,6 @@ export default function PatientList() {
     setPatients(getPatients());
     setShowForm(false);
     setForm({ name: '', email: '', phone: '', birthDate: '', startDate: new Date().toISOString().split('T')[0], targetBehaviors: [''], notes: '' });
-    // Mostrar código de acesso
     setCopiedCode(newPatient.accessCode);
     setTimeout(() => setCopiedCode(null), 10000);
   };
@@ -54,6 +54,13 @@ export default function PatientList() {
     navigator.clipboard.writeText(code);
     setCopiedCode(code);
     setTimeout(() => setCopiedCode(null), 3000);
+  };
+
+  const copyLink = (code: string) => {
+    const link = getShareableLink(code);
+    navigator.clipboard.writeText(link);
+    setCopiedLink(code);
+    setTimeout(() => setCopiedLink(null), 3000);
   };
 
   return (
@@ -182,16 +189,12 @@ export default function PatientList() {
         )}
 
         {/* Código de acesso recém-criado */}
-        {copiedCode && (
+        {copiedCode && !patients.some(p => p.accessCode === copiedCode) && (
           <div className="bg-sage-50 border border-sage-300 rounded-2xl p-4 text-center">
             <p className="text-sage-700 font-medium mb-2">Código de acesso do paciente:</p>
             <div className="flex items-center justify-center gap-2">
               <span className="text-3xl font-bold tracking-widest text-sage-800">{copiedCode}</span>
-              <button onClick={() => copyCode(copiedCode)} className="p-2 rounded-lg bg-sage-200 hover:bg-sage-300">
-                <Copy className="w-4 h-4 text-sage-700" />
-              </button>
             </div>
-            <p className="text-sage-600 text-sm mt-2">Compartilhe este código com o paciente para que ele acesse o diário.</p>
           </div>
         )}
 
@@ -204,58 +207,92 @@ export default function PatientList() {
               <p className="text-sm">Clique em "Novo" para cadastrar um paciente.</p>
             </div>
           ) : (
-            filteredPatients.map(patient => (
-              <div
-                key={patient.id}
-                className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow"
-              >
-                <div className="flex items-center justify-between">
-                  <div
-                    className="flex-1 cursor-pointer"
-                    onClick={() => navigate(`/psicologo/paciente/${patient.id}`)}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-vanilla-200 flex items-center justify-center">
-                        <span className="text-vanilla-700 font-bold text-lg">
-                          {patient.name.charAt(0).toUpperCase()}
-                        </span>
-                      </div>
-                      <div>
-                        <p className="font-semibold text-gray-900">{patient.name}</p>
-                        <p className="text-xs text-gray-500">
-                          Código: <span className="font-mono font-bold">{patient.accessCode}</span>
-                        </p>
+            filteredPatients.map(patient => {
+              const anamnesis = getAnamnesis(patient.id);
+              const entries = getMolecularEntries(patient.id);
+              const filledToday = hasPatientFilledToday(patient.id);
+
+              return (
+                <div
+                  key={patient.id}
+                  className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow"
+                >
+                  <div className="flex items-center justify-between">
+                    <div
+                      className="flex-1 cursor-pointer"
+                      onClick={() => navigate(`/psicologo/paciente/${patient.id}`)}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-vanilla-200 flex items-center justify-center">
+                          <span className="text-vanilla-700 font-bold text-lg">
+                            {patient.name.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                        <div>
+                          <p className="font-semibold text-gray-900">{patient.name}</p>
+                          <p className="text-xs text-gray-500">
+                            Código: <span className="font-mono font-bold">{patient.accessCode}</span>
+                          </p>
+                        </div>
                       </div>
                     </div>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => copyLink(patient.accessCode)}
+                        className="p-2 rounded-lg hover:bg-sage-50 text-gray-400 hover:text-sage-600"
+                        title="Copiar link do paciente"
+                      >
+                        {copiedLink === patient.accessCode ? <Check className="w-4 h-4 text-sage-500" /> : <Share2 className="w-4 h-4" />}
+                      </button>
+                      <button
+                        onClick={() => copyCode(patient.accessCode)}
+                        className="p-2 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600"
+                        title="Copiar código"
+                      >
+                        {copiedCode === patient.accessCode ? <Check className="w-4 h-4 text-sage-500" /> : <Copy className="w-4 h-4" />}
+                      </button>
+                      <button
+                        onClick={() => handleDelete(patient.id)}
+                        className="p-2 rounded-lg hover:bg-rose-50 text-gray-400 hover:text-rose-500"
+                        title="Remover paciente"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => copyCode(patient.accessCode)}
-                      className="p-2 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600"
-                      title="Copiar código"
-                    >
-                      {copiedCode === patient.accessCode ? <Check className="w-4 h-4 text-sage-500" /> : <Copy className="w-4 h-4" />}
-                    </button>
-                    <button
-                      onClick={() => handleDelete(patient.id)}
-                      className="p-2 rounded-lg hover:bg-rose-50 text-gray-400 hover:text-rose-500"
-                      title="Remover paciente"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-                {patient.targetBehaviors.length > 0 && patient.targetBehaviors[0] && (
+
+                  {/* Status indicators */}
                   <div className="mt-3 flex flex-wrap gap-2">
+                    {/* Anamnese status */}
+                    <span className={`text-xs px-2 py-1 rounded-lg flex items-center gap-1 ${
+                      anamnesis?.status === 'completed'
+                        ? 'bg-sage-100 text-sage-700'
+                        : anamnesis
+                        ? 'bg-warm-100 text-warm-700'
+                        : 'bg-gray-100 text-gray-500'
+                    }`}>
+                      <Brain className="w-3 h-3" />
+                      {anamnesis?.status === 'completed' ? 'Anamnese completa' : anamnesis ? 'Anamnese em andamento' : 'Sem anamnese'}
+                    </span>
+
+                    {/* Diary status */}
+                    <span className={`text-xs px-2 py-1 rounded-lg flex items-center gap-1 ${
+                      filledToday ? 'bg-sage-100 text-sage-700' : 'bg-gray-100 text-gray-500'
+                    }`}>
+                      <ClipboardList className="w-3 h-3" />
+                      {entries.length} registros {filledToday ? '(hoje: ok)' : ''}
+                    </span>
+
+                    {/* Target behaviors */}
                     {patient.targetBehaviors.filter(b => b).map((b, i) => (
                       <span key={i} className="text-xs bg-vanilla-100 text-vanilla-700 px-2 py-1 rounded-lg">
                         {b}
                       </span>
                     ))}
                   </div>
-                )}
-              </div>
-            ))
+                </div>
+              );
+            })
           )}
         </div>
       </div>

@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import type { Patient, MolecularEntry, MolarEntry, Notification } from '../types';
+import type { Patient, MolecularEntry, MolarEntry, Notification, AnamnesisData } from '../types';
 
 const KEYS = {
   patients: 'aba_patients',
@@ -7,6 +7,7 @@ const KEYS = {
   molar: 'aba_molar_entries',
   notifications: 'aba_notifications',
   psychologistPin: 'aba_psychologist_pin',
+  anamnesis: 'aba_anamnesis',
 };
 
 function get<T>(key: string, fallback: T): T {
@@ -69,11 +70,12 @@ export function updatePatient(id: string, updates: Partial<Patient>): void {
 export function deletePatient(id: string): void {
   const patients = getPatients().filter(p => p.id !== id);
   set(KEYS.patients, patients);
-  // Remover entradas associadas
   const molecular = getMolecularEntries().filter(e => e.patientId !== id);
   set(KEYS.molecular, molecular);
   const molar = getMolarEntries().filter(e => e.patientId !== id);
   set(KEYS.molar, molar);
+  const anamnesis = getAllAnamnesis().filter(a => a.patientId !== id);
+  set(KEYS.anamnesis, anamnesis);
 }
 
 // Entradas Moleculares
@@ -93,7 +95,6 @@ export function addMolecularEntry(entry: Omit<MolecularEntry, 'id' | 'createdAt'
   entries.push(newEntry);
   set(KEYS.molecular, entries);
 
-  // Gerar notificação
   const patient = getPatient(entry.patientId);
   if (patient) {
     const notif: Notification = {
@@ -151,6 +152,84 @@ export function deleteMolarEntry(id: string): void {
   set(KEYS.molar, entries);
 }
 
+// Anamnese
+export function getAllAnamnesis(): AnamnesisData[] {
+  return get<AnamnesisData[]>(KEYS.anamnesis, []);
+}
+
+export function getAnamnesis(patientId: string): AnamnesisData | undefined {
+  return getAllAnamnesis().find(a => a.patientId === patientId);
+}
+
+export function createAnamnesis(patientId: string): AnamnesisData {
+  const existing = getAnamnesis(patientId);
+  if (existing) return existing;
+
+  const empty = {
+    fullName: '', preferredName: '', birthDate: '', age: '', gender: '', genderIdentity: '',
+    pronouns: '', maritalStatus: '', children: '', childrenAges: '', education: '',
+    occupation: '', workplace: '', naturalFrom: '', currentCity: '', address: '',
+    phone: '', email: '', emergencyContact: '', emergencyPhone: '', referredBy: '', healthInsurance: '',
+  };
+
+  const newAnamnesis: AnamnesisData = {
+    id: uuidv4(),
+    patientId,
+    completedAt: '',
+    status: 'in_progress',
+    currentSection: 1,
+    identification: { ...empty },
+    chiefComplaint: { mainComplaint: '', ownWords: '', whenStarted: '', whatTriggered: '', expectations: '', previousTreatments: '', previousDiagnoses: '', currentMedications: '', whySeekingNow: '' },
+    currentHistory: { symptomOnset: '', symptomEvolution: '', worseningFactors: '', improvementFactors: '', dailyImpact: '', workImpact: '', relationshipImpact: '', previousAttempts: '', symptomFrequency: '', symptomIntensity: '' },
+    personalHistory: { pregnancyComplications: '', birthType: '', developmentMilestones: '', childhoodBehavior: '', schoolPerformance: '', childhoodFriendships: '', significantChildhoodEvents: '', adolescenceExperience: '', puberty: '', identityFormation: '', adultTransition: '', significantLifeEvents: '', majorLosses: '', traumaticExperiences: '', achievementsProud: '' },
+    familyHistory: { familyComposition: '', fatherRelationship: '', motherRelationship: '', siblingRelationship: '', familyDynamics: '', parentalStyle: '', familyConflicts: '', familyPsychiatricHistory: '', familySubstanceUse: '', familySuicideHistory: '', familyViolenceHistory: '', currentFamilyRelations: '', familySupport: '' },
+    physicalHealth: { currentDiseases: '', chronicConditions: '', currentMedications: '', allergies: '', previousSurgeries: '', hospitalizations: '', headInjuries: '', chronicPain: '', sleepQuality: '', sleepHours: '', sleepDisturbances: '', appetite: '', dietDescription: '', physicalActivity: '', activityFrequency: '', lastMedicalCheckup: '', pendingExams: '' },
+    mentalHealth: { previousDiagnoses: '', previousTreatments: '', previousTherapists: '', therapyDuration: '', therapyApproach: '', whatWorked: '', whatDidntWork: '', psychiatricMedications: '', psychiatricHospitalizations: '', suicidalIdeation: '', suicideAttempts: '', selfHarm: '', currentMoodDescription: '', anxietyLevel: '', panicAttacks: '', phobias: '', obsessiveThoughts: '', compulsiveBehaviors: '', eatingDisorders: '', bodyImageConcerns: '' },
+    substanceUse: { alcoholUse: '', alcoholFrequency: '', alcoholQuantity: '', tobaccoUse: '', tobaccoFrequency: '', cannabisUse: '', otherDrugs: '', substanceHistory: '', previousTreatment: '', currentAbstinence: '', caffeineUse: '', medicationMisuse: '' },
+    socialLife: { socialNetwork: '', closeFriends: '', socialActivities: '', communityInvolvement: '', socialDifficulties: '', loneliness: '', socialMediaUse: '', conflictResolution: '', assertiveness: '', trustInOthers: '' },
+    relationships: { currentRelationship: '', relationshipDuration: '', relationshipQuality: '', relationshipConflicts: '', communicationPattern: '', previousRelationships: '', relationshipPatterns: '', attachmentStyle: '', jealousy: '', domesticViolence: '', sexualOrientation: '', sexualLife: '', sexualDifficulties: '', sexualTrauma: '' },
+    professionalLife: { currentOccupation: '', jobSatisfaction: '', workEnvironment: '', workRelationships: '', workStress: '', careerGoals: '', financialSituation: '', financialStress: '', unemploymentHistory: '', academicHistory: '', learningDifficulties: '', currentStudies: '' },
+    lifestyle: { typicalDay: '', morningRoutine: '', eveningRoutine: '', hobbies: '', leisure: '', physicalExercise: '', relaxationTechniques: '', screenTime: '', timeManagement: '', selfCareHabits: '' },
+    spirituality: { religiousBelief: '', spiritualPractices: '', spiritualCommunity: '', culturalBackground: '', culturalValues: '', culturalConflicts: '', meaningOfLife: '', copingThroughFaith: '' },
+    legalAspects: { legalInvolvement: '', currentProcesses: '', custodyIssues: '', restrainingOrders: '', criminalHistory: '', victimOfCrime: '' },
+    riskAssessment: { suicidalIdeation: '', suicidalPlan: '', suicidalIntent: '', previousAttempts: '', selfHarmBehavior: '', riskToOthers: '', accessToMeans: '', protectiveFactors: '', reasonsForLiving: '', safetyPlan: '' },
+    goals: { therapyGoals: '', shortTermGoals: '', longTermGoals: '', changeMotivation: '', perceivedBarriers: '', supportSystems: '', strengthsResources: '', additionalInfo: '' },
+  };
+
+  const all = getAllAnamnesis();
+  all.push(newAnamnesis);
+  set(KEYS.anamnesis, all);
+  return newAnamnesis;
+}
+
+export function updateAnamnesis(patientId: string, updates: Partial<AnamnesisData>): void {
+  const all = getAllAnamnesis();
+  const idx = all.findIndex(a => a.patientId === patientId);
+  if (idx !== -1) {
+    all[idx] = { ...all[idx], ...updates };
+    set(KEYS.anamnesis, all);
+  }
+}
+
+export function completeAnamnesis(patientId: string): void {
+  updateAnamnesis(patientId, { status: 'completed', completedAt: new Date().toISOString() });
+  updatePatient(patientId, { anamnesisCompleted: true });
+
+  const patient = getPatient(patientId);
+  if (patient) {
+    const notif: Notification = {
+      id: uuidv4(),
+      patientId,
+      patientName: patient.name,
+      type: 'anamnesis_completed',
+      message: `${patient.name} completou a anamnese psicológica`,
+      date: new Date().toISOString(),
+      read: false,
+    };
+    addNotification(notif);
+  }
+}
+
 // Notificações
 export function getNotifications(): Notification[] {
   return get<Notification[]>(KEYS.notifications, []);
@@ -190,7 +269,11 @@ function generateAccessCode(): string {
   return code;
 }
 
-// Verificar se paciente preencheu hoje
+export function getShareableLink(accessCode: string): string {
+  const base = window.location.origin;
+  return `${base}/paciente/${accessCode}`;
+}
+
 export function hasPatientFilledToday(patientId: string): boolean {
   const today = new Date().toISOString().split('T')[0];
   const entries = getMolecularEntries(patientId);
@@ -209,13 +292,11 @@ export function getPatientStats(patientId: string) {
     ? molecular.reduce((sum, e) => sum + e.emotionIntensity, 0) / totalMolecular
     : 0;
 
-  // Últimos 7 dias
   const last7Days = new Date();
   last7Days.setDate(last7Days.getDate() - 7);
   const recentEntries = molecular.filter(e => new Date(e.date) >= last7Days);
   const daysWithEntries = new Set(recentEntries.map(e => e.date)).size;
 
-  // Frequência de funções do comportamento
   const functionCounts: Record<string, number> = {};
   molecular.forEach(e => {
     e.behaviorFunction.forEach(f => {
@@ -223,12 +304,10 @@ export function getPatientStats(patientId: string) {
     });
   });
 
-  // Intensidade ao longo do tempo
   const intensityOverTime = molecular
     .sort((a, b) => a.date.localeCompare(b.date))
     .map(e => ({ date: e.date, intensity: e.emotionIntensity }));
 
-  // Frequência ao longo do tempo
   const frequencyByDate: Record<string, number> = {};
   molecular.forEach(e => {
     frequencyByDate[e.date] = (frequencyByDate[e.date] || 0) + 1;
@@ -246,10 +325,10 @@ export function getPatientStats(patientId: string) {
   };
 }
 
-// Exportar dados
 export function exportPatientData(patientId: string): string {
   const patient = getPatient(patientId);
   const molecular = getMolecularEntries(patientId);
   const molar = getMolarEntries(patientId);
-  return JSON.stringify({ patient, molecular, molar }, null, 2);
+  const anamnesis = getAnamnesis(patientId);
+  return JSON.stringify({ patient, anamnesis, molecular, molar }, null, 2);
 }

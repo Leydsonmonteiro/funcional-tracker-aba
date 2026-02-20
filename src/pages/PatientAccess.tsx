@@ -13,7 +13,7 @@ export default function PatientAccess() {
     setError('');
     const patient = getPatientByCode(code.toUpperCase().trim());
     if (patient) {
-      navigate(`/paciente/${patient.accessCode}/diario`);
+      navigate(`/paciente/${patient.accessCode}`);
     } else {
       setError('Código não encontrado. Verifique com seu psicólogo(a).');
     }
@@ -30,7 +30,7 @@ export default function PatientAccess() {
           </div>
           <h2 className="text-2xl font-bold text-gray-900">Área do Paciente</h2>
           <p className="text-gray-500 mt-2">
-            Digite o código que seu psicólogo(a) forneceu para acessar seu diário.
+            Digite o código que seu psicólogo(a) forneceu para acessar seu espaço.
           </p>
         </div>
 
@@ -58,7 +58,7 @@ export default function PatientAccess() {
             type="submit"
             className="w-full bg-sage-500 hover:bg-sage-600 text-white py-3 rounded-xl font-semibold text-lg shadow-md hover:shadow-lg transition-all"
           >
-            Acessar Diário
+            Acessar Meu Espaço
           </button>
         </form>
 

@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, ClipboardList, AlertTriangle, CheckCircle2, TrendingUp, Clock } from 'lucide-react';
+import { Users, ClipboardList, AlertTriangle, CheckCircle2, TrendingUp, Clock, Brain, Bell } from 'lucide-react';
 import Layout from '../components/Layout';
-import { getPatients, getMolecularEntries, getMolarEntries, getUnreadCount, hasPatientFilledToday } from '../utils/store';
+import { getPatients, getMolecularEntries, getMolarEntries, getUnreadCount, hasPatientFilledToday, getAnamnesis, getAllAnamnesis } from '../utils/store';
 
 export default function PsychologistDashboard() {
   const navigate = useNavigate();
@@ -21,6 +21,12 @@ export default function PsychologistDashboard() {
   const patientsFilledToday = activePatients.filter(p => hasPatientFilledToday(p.id));
   const patientsMissing = activePatients.filter(p => !hasPatientFilledToday(p.id));
 
+  // Anamnese stats
+  const completedAnamnesis = activePatients.filter(p => {
+    const a = getAnamnesis(p.id);
+    return a?.status === 'completed';
+  }).length;
+
   // Intensidades altas recentes (últimos 3 dias)
   const threeDaysAgo = new Date();
   threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
@@ -28,25 +34,32 @@ export default function PsychologistDashboard() {
     e => e.emotionIntensity >= 7 && new Date(e.createdAt) >= threeDaysAgo
   );
 
+  const getGreeting = () => {
+    const h = new Date().getHours();
+    if (h < 12) return 'Bom dia!';
+    if (h < 18) return 'Boa tarde!';
+    return 'Boa noite!';
+  };
+
   return (
     <Layout title="Dashboard" variant="psychologist">
       <div className="space-y-6">
         {/* Saudação */}
         <div className="bg-gradient-to-r from-vanilla-200 via-vanilla-100 to-white rounded-2xl p-6 border border-vanilla-300">
-          <h2 className="text-2xl font-bold text-gray-900 mb-1">Bom dia!</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-1">{getGreeting()}</h2>
           <p className="text-gray-600">Aqui está o resumo dos seus pacientes hoje.</p>
         </div>
 
         {/* Cards de estatísticas */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {[
             { icon: Users, label: 'Pacientes Ativos', value: activePatients.length, color: 'bg-vanilla-100 text-vanilla-700', iconColor: 'text-vanilla-500' },
-            { icon: ClipboardList, label: 'Registros Moleculares', value: molecularEntries.length, color: 'bg-sage-100 text-sage-700', iconColor: 'text-sage-500' },
-            { icon: TrendingUp, label: 'Sessões (Molar)', value: molarEntries.length, color: 'bg-sky-100 text-sky-700', iconColor: 'text-sky-500' },
-            { icon: AlertTriangle, label: 'Alertas Não Lidos', value: unreadCount, color: 'bg-rose-100 text-rose-700', iconColor: 'text-rose-500' },
+            { icon: ClipboardList, label: 'Registros ABC', value: molecularEntries.length, color: 'bg-sage-100 text-sage-700', iconColor: 'text-sage-500' },
+            { icon: TrendingUp, label: 'Sessões Molares', value: molarEntries.length, color: 'bg-sky-100 text-sky-700', iconColor: 'text-sky-500' },
+            { icon: Brain, label: 'Anamneses Completas', value: `${completedAnamnesis}/${activePatients.length}`, color: 'bg-lavender-50 text-lavender-600', iconColor: 'text-lavender-500' },
           ].map(({ icon: Icon, label, value, color, iconColor }) => (
             <div key={label} className={`${color} rounded-2xl p-4`}>
-              <Icon className={`w-6 h-6 ${iconColor} mb-2`} />
+              <Icon className={`w-5 h-5 ${iconColor} mb-2`} />
               <p className="text-2xl font-bold">{value}</p>
               <p className="text-xs opacity-70">{label}</p>
             </div>
@@ -58,37 +71,59 @@ export default function PsychologistDashboard() {
           <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
             <Clock className="w-5 h-5 text-vanilla-600" />
             Preenchimento de Hoje
+            <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full ml-auto">
+              {patientsFilledToday.length}/{activePatients.length}
+            </span>
           </h3>
           {activePatients.length === 0 ? (
             <p className="text-gray-500 text-sm">Nenhum paciente cadastrado ainda.</p>
           ) : (
-            <div className="space-y-3">
-              {patientsFilledToday.map(p => (
-                <div
-                  key={p.id}
-                  onClick={() => navigate(`/psicologo/paciente/${p.id}`)}
-                  className="flex items-center gap-3 p-3 rounded-xl bg-sage-50 border border-sage-200 cursor-pointer hover:bg-sage-100 transition-colors"
-                >
-                  <CheckCircle2 className="w-5 h-5 text-sage-500 shrink-0" />
-                  <div className="flex-1">
-                    <p className="font-medium text-gray-800">{p.name}</p>
-                    <p className="text-xs text-sage-600">Preencheu o diário hoje</p>
+            <div className="space-y-2">
+              {patientsFilledToday.map(p => {
+                const anamnesis = getAnamnesis(p.id);
+                return (
+                  <div
+                    key={p.id}
+                    onClick={() => navigate(`/psicologo/paciente/${p.id}`)}
+                    className="flex items-center gap-3 p-3 rounded-xl bg-sage-50 border border-sage-200 cursor-pointer hover:bg-sage-100 transition-colors"
+                  >
+                    <CheckCircle2 className="w-5 h-5 text-sage-500 shrink-0" />
+                    <div className="flex-1">
+                      <p className="font-medium text-gray-800">{p.name}</p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="text-xs text-sage-600">Diário preenchido</span>
+                        {anamnesis?.status === 'completed' && (
+                          <span className="text-xs bg-sage-100 text-sage-600 px-1.5 py-0.5 rounded">Anamnese ok</span>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              ))}
-              {patientsMissing.map(p => (
-                <div
-                  key={p.id}
-                  onClick={() => navigate(`/psicologo/paciente/${p.id}`)}
-                  className="flex items-center gap-3 p-3 rounded-xl bg-rose-50 border border-rose-200 cursor-pointer hover:bg-rose-100 transition-colors"
-                >
-                  <AlertTriangle className="w-5 h-5 text-rose-400 shrink-0" />
-                  <div className="flex-1">
-                    <p className="font-medium text-gray-800">{p.name}</p>
-                    <p className="text-xs text-rose-500">Ainda não preencheu hoje</p>
+                );
+              })}
+              {patientsMissing.map(p => {
+                const anamnesis = getAnamnesis(p.id);
+                return (
+                  <div
+                    key={p.id}
+                    onClick={() => navigate(`/psicologo/paciente/${p.id}`)}
+                    className="flex items-center gap-3 p-3 rounded-xl bg-rose-50 border border-rose-200 cursor-pointer hover:bg-rose-100 transition-colors"
+                  >
+                    <AlertTriangle className="w-5 h-5 text-rose-400 shrink-0" />
+                    <div className="flex-1">
+                      <p className="font-medium text-gray-800">{p.name}</p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="text-xs text-rose-500">Diário pendente</span>
+                        {!anamnesis && (
+                          <span className="text-xs bg-rose-100 text-rose-500 px-1.5 py-0.5 rounded">Sem anamnese</span>
+                        )}
+                        {anamnesis && anamnesis.status !== 'completed' && (
+                          <span className="text-xs bg-warm-100 text-warm-600 px-1.5 py-0.5 rounded">Anamnese em andamento</span>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
@@ -136,7 +171,7 @@ export default function PsychologistDashboard() {
             onClick={() => navigate('/psicologo/notificacoes')}
             className="bg-coral-500 hover:bg-coral-400 text-white p-4 rounded-2xl font-semibold shadow-md hover:shadow-lg transition-all relative"
           >
-            <AlertTriangle className="w-6 h-6 mx-auto mb-2" />
+            <Bell className="w-6 h-6 mx-auto mb-2" />
             Ver Notificações
             {unreadCount > 0 && (
               <span className="absolute top-2 right-2 bg-white text-coral-500 text-xs font-bold px-2 py-0.5 rounded-full">

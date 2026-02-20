@@ -6,6 +6,8 @@ import PatientList from './pages/PatientList';
 import PatientDetail from './pages/PatientDetail';
 import MolarForm from './pages/MolarForm';
 import PatientAccess from './pages/PatientAccess';
+import PatientPortal from './pages/PatientPortal';
+import PatientAnamnesis from './pages/PatientAnamnesis';
 import PatientDiary from './pages/PatientDiary';
 import PatientHistory from './pages/PatientHistory';
 import NotificationsPage from './pages/NotificationsPage';
@@ -24,6 +26,8 @@ export default function App() {
       <Route path="/psicologo/paciente/:id/analytics" element={<AnalyticsPage />} />
       <Route path="/psicologo/notificacoes" element={<NotificationsPage />} />
       <Route path="/paciente" element={<PatientAccess />} />
+      <Route path="/paciente/:code" element={<PatientPortal />} />
+      <Route path="/paciente/:code/anamnese" element={<PatientAnamnesis />} />
       <Route path="/paciente/:code/diario" element={<PatientDiary />} />
       <Route path="/paciente/:code/historico" element={<PatientHistory />} />
     </Routes>
