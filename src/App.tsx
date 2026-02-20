@@ -12,6 +12,8 @@ import PatientDiary from './pages/PatientDiary';
 import PatientHistory from './pages/PatientHistory';
 import NotificationsPage from './pages/NotificationsPage';
 import AnalyticsPage from './pages/AnalyticsPage';
+import PrintPatientDiary from './pages/PrintPatientDiary';
+import PrintSessionForm from './pages/PrintSessionForm';
 
 export default function App() {
   return (
@@ -25,11 +27,13 @@ export default function App() {
       <Route path="/psicologo/paciente/:id/molar/:entryId" element={<MolarForm />} />
       <Route path="/psicologo/paciente/:id/analytics" element={<AnalyticsPage />} />
       <Route path="/psicologo/notificacoes" element={<NotificationsPage />} />
+      <Route path="/psicologo/imprimir/sessao" element={<PrintSessionForm />} />
       <Route path="/paciente" element={<PatientAccess />} />
       <Route path="/paciente/:code" element={<PatientPortal />} />
       <Route path="/paciente/:code/anamnese" element={<PatientAnamnesis />} />
       <Route path="/paciente/:code/diario" element={<PatientDiary />} />
       <Route path="/paciente/:code/historico" element={<PatientHistory />} />
+      <Route path="/paciente/imprimir/diario" element={<PrintPatientDiary />} />
     </Routes>
   );
 }

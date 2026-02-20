@@ -291,6 +291,24 @@ export default function PatientDetail() {
           </button>
         </div>
 
+        {/* Botões de Impressão */}
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            onClick={() => navigate('/psicologo/imprimir/sessao')}
+            className="bg-white border border-vanilla-300 hover:bg-vanilla-50 text-vanilla-700 p-3 rounded-2xl font-medium shadow-sm flex items-center justify-center gap-2"
+          >
+            <Download className="w-4 h-4" />
+            <span className="text-sm">Imprimir Formulário de Sessão</span>
+          </button>
+          <button
+            onClick={() => navigate('/paciente/imprimir/diario')}
+            className="bg-white border border-sage-300 hover:bg-sage-50 text-sage-700 p-3 rounded-2xl font-medium shadow-sm flex items-center justify-center gap-2"
+          >
+            <Download className="w-4 h-4" />
+            <span className="text-sm">Imprimir Diário do Paciente</span>
+          </button>
+        </div>
+
         {/* Tabs */}
         <div className="flex bg-gray-100 rounded-xl p-1">
           <button

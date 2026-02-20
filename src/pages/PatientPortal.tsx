@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ClipboardList, Brain, History, User, CheckCircle2, AlertCircle } from 'lucide-react';
+import { ClipboardList, Brain, History, User, CheckCircle2, AlertCircle, Printer } from 'lucide-react';
 import { getPatientByCode, getAnamnesis, getMolecularEntries, hasPatientFilledToday } from '../utils/store';
 import type { Patient } from '../types';
 
@@ -143,8 +143,24 @@ export default function PatientPortal() {
           </button>
         </div>
 
+        {/* Versão Impressa */}
+        <button
+          onClick={() => navigate('/paciente/imprimir/diario')}
+          className="w-full p-4 rounded-2xl bg-white border border-gray-200 text-left hover:shadow-md transition-all shadow-sm mt-3"
+        >
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center">
+              <Printer className="w-6 h-6 text-gray-600" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-bold text-lg text-gray-900">Versão para Imprimir</h3>
+              <p className="text-sm text-gray-500">Baixe o diário em PDF para preencher no papel</p>
+            </div>
+          </div>
+        </button>
+
         {/* Dica */}
-        <div className="mt-8 bg-sage-50 border border-sage-200 rounded-2xl p-4">
+        <div className="mt-6 bg-sage-50 border border-sage-200 rounded-2xl p-4">
           <p className="text-sage-800 text-sm text-center">
             Preencher o diário diariamente ajuda seu psicólogo(a) a entender melhor seus padrões 
             e oferecer um tratamento mais eficaz.
