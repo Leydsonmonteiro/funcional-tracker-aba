@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bell, CheckCheck, AlertTriangle, ClipboardList, TrendingUp, Eye } from 'lucide-react';
+import { Bell, CheckCheck, AlertTriangle, ClipboardList, TrendingUp } from 'lucide-react';
 import Layout from '../components/Layout';
 import { getNotifications, markNotificationRead, markAllNotificationsRead } from '../utils/store';
 import type { Notification } from '../types';

@@ -1,6 +1,6 @@
-import { ReactNode } from 'react';
+import { type ReactNode } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, Users, Bell, BarChart3, ArrowLeft, Brain } from 'lucide-react';
+import { Home, Users, Bell, ArrowLeft, Brain } from 'lucide-react';
 import { getUnreadCount } from '../utils/store';
 
 interface LayoutProps {

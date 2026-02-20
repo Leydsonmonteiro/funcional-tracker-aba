@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Users, ClipboardList, AlertTriangle, CheckCircle2, TrendingUp, Clock, Brain, Bell } from 'lucide-react';
 import Layout from '../components/Layout';
-import { getPatients, getMolecularEntries, getMolarEntries, getUnreadCount, hasPatientFilledToday, getAnamnesis, getAllAnamnesis } from '../utils/store';
+import { getPatients, getMolecularEntries, getMolarEntries, getUnreadCount, hasPatientFilledToday, getAnamnesis } from '../utils/store';
 
 export default function PsychologistDashboard() {
   const navigate = useNavigate();

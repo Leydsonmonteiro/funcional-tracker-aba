@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Send, ClipboardList, History, Brain, CheckCircle2 } from 'lucide-react';
+import { Send, Brain, CheckCircle2, History as HistoryIcon } from 'lucide-react';
 import { getPatientByCode, addMolecularEntry } from '../utils/store';
 import { BEHAVIOR_FUNCTIONS } from '../types';
 
@@ -280,7 +280,7 @@ export default function PatientDiary() {
               onClick={() => navigate(`/paciente/${code}/historico`)}
               className="w-full border border-gray-200 text-gray-600 py-3 rounded-xl font-medium hover:bg-gray-50"
             >
-              <History className="w-4 h-4 inline mr-2" />
+              <HistoryIcon className="w-4 h-4 inline mr-2" />
               Ver Meu Histórico
             </button>
           </div>
@@ -302,7 +302,7 @@ export default function PatientDiary() {
             onClick={() => navigate(`/paciente/${code}/historico`)}
             className="p-2 rounded-xl hover:bg-sage-100 text-gray-500"
           >
-            <History className="w-5 h-5" />
+            <HistoryIcon className="w-5 h-5" />
           </button>
         </div>
       </header>

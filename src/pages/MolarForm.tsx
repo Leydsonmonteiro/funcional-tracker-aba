@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Save, Microscope, Brain, BookOpen, Target, MessageSquare, Lightbulb } from 'lucide-react';
+import { Save, Microscope, Brain, Target, MessageSquare, Lightbulb } from 'lucide-react';
 import Layout from '../components/Layout';
 import { getPatient, getMolarEntries, addMolarEntry, updateMolarEntry } from '../utils/store';
 import type { MolarEntry } from '../types';
